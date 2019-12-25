@@ -5,11 +5,8 @@ import (
 	"time"
 )
 
-// RetryableFunc is a retryable function (closure)
-type RetryableFunc func() error
-
 // RetryStrategy is a configurable strategy that calls retryable function
-type RetryStrategy func(RetryableFunc) error
+type RetryStrategy func(Callable) error
 
 // RetryOption applies a single retry option to the strategy config
 type RetryOption func(o *RetryOptions)
@@ -69,7 +66,7 @@ func WithContext(ctx context.Context) RetryOption {
 // NewRetryStrategy creates retry strategy with provided options, note that the
 // strategy can be defined globally and reused multiple times
 func NewRetryStrategy(opts ...RetryOption) RetryStrategy {
-	return func(fn RetryableFunc) (err error) {
+	return func(fn Callable) (err error) {
 		options := defaultOptions()
 		for _, opt := range opts {
 			opt(options)
