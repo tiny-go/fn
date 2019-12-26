@@ -1,12 +1,12 @@
-package fn
+package future
 
 import "net/http"
 
-func ExampleNewFuture() {
+func ExampleNew() {
 	// define the response globally to be set in the callable
 	var rsp *http.Response
 
-	future := NewFuture(func() (err error) {
+	future := New(func() (err error) {
 		rsp, err = http.Get("http://example.com")
 		return err
 	})

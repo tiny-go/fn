@@ -1,24 +1,26 @@
-package fn
+package retry
 
 import (
 	"context"
 	"time"
+
+	"github.com/tiny-go/fn"
 )
 
-// RetryStrategy is a configurable strategy that calls retryable function
-type RetryStrategy func(Callable) error
+// Strategy is a configurable strategy that calls retryable function
+type Strategy func(fn.Callable) error
 
-// RetryOption applies a single retry option to the strategy config
-type RetryOption func(o *RetryOptions)
+// Option applies a single retry option to the strategy config
+type Option func(options *Options)
 
-// RetryCallback is called after each attempt failure (you can use it to log the
+// Callback is called after each attempt failure (you can use it to log the
 // intermediary error)
-type RetryCallback func(n uint, err error)
+type Callback func(n uint, err error)
 
-// RetryOptions is a retry strategy config
-type RetryOptions struct {
+// Options is a retry strategy config
+type Options struct {
 	attempts uint
-	callback RetryCallback
+	callback Callback
 	context  context.Context
 	interval time.Duration
 }
@@ -26,8 +28,8 @@ type RetryOptions struct {
 // generate default config
 // NOTE: there is no strategy by default, it wraps provided retryable, calls it
 // once and propagates the error as if there is no retry strategy
-func defaultOptions() *RetryOptions {
-	return &RetryOptions{
+func defaultOptions() *Options {
+	return &Options{
 		attempts: 1,
 		callback: func(uint, error) {},
 		context:  context.Background(),
@@ -36,42 +38,42 @@ func defaultOptions() *RetryOptions {
 }
 
 // WithAttempts sets the number of retries
-func WithAttempts(attempts uint) RetryOption {
-	return func(options *RetryOptions) {
+func WithAttempts(attempts uint) Option {
+	return func(options *Options) {
 		options.attempts = attempts
 	}
 }
 
 // WithInterval allows to configure retry interval
-func WithInterval(interval time.Duration) RetryOption {
-	return func(options *RetryOptions) {
+func WithInterval(interval time.Duration) Option {
+	return func(options *Options) {
 		options.interval = interval
 	}
 }
 
 // WithCallback is a function which is going to be called after every failure
-func WithCallback(callback RetryCallback) RetryOption {
-	return func(options *RetryOptions) {
+func WithCallback(callback Callback) Option {
+	return func(options *Options) {
 		options.callback = callback
 	}
 }
 
 // WithContext defines the context of retry strategy
-func WithContext(ctx context.Context) RetryOption {
-	return func(options *RetryOptions) {
+func WithContext(ctx context.Context) Option {
+	return func(options *Options) {
 		options.context = ctx
 	}
 }
 
-// NewRetryStrategy creates retry strategy with provided options, note that the
+// NewStrategy creates retry strategy with provided options, note that the
 // strategy can be defined globally and reused multiple times
-func NewRetryStrategy(opts ...RetryOption) RetryStrategy {
-	return func(fn Callable) (err error) {
-		options := defaultOptions()
-		for _, opt := range opts {
-			opt(options)
-		}
+func NewStrategy(opts ...Option) Strategy {
+	options := defaultOptions()
+	for _, opt := range opts {
+		opt(options)
+	}
 
+	return func(fn fn.Callable) (err error) {
 		tick := time.NewTicker(options.interval)
 		defer tick.Stop()
 
@@ -83,7 +85,7 @@ func NewRetryStrategy(opts ...RetryOption) RetryStrategy {
 			if try == options.attempts {
 				break
 			}
-			options.callback(try, err)
+			go options.callback(try, err)
 			select {
 			case <-options.context.Done():
 				return err
