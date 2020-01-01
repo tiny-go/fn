@@ -85,7 +85,7 @@ func NewStrategy(opts ...Option) Strategy {
 			if try == options.attempts {
 				break
 			}
-			go options.callback(try, err)
+			options.callback(try, err)
 			select {
 			case <-options.context.Done():
 				return err
