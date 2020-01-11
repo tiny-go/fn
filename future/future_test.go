@@ -7,27 +7,29 @@ import (
 
 func Test_New(t *testing.T) {
 	t.Run("future should wait until callable returns the result", func(t *testing.T) {
-		var externalVar bool
+		called := make(chan struct{}, 1)
 
 		callable := func() error {
-			externalVar = true
+			called <- struct{}{}
 			return nil
 		}
 
 		New(callable)()
 
-		if externalVar != true {
-			t.Error("eternal variable was expected to be modified")
+		select {
+		case <-called:
+		default:
+			t.Error("callable func was expected to be called")
 		}
 	})
 }
 
 func Test_NewWithContext(t *testing.T) {
 	t.Run("future should wait until callable returns the result", func(t *testing.T) {
-		var externalVar bool
+		called := make(chan struct{}, 1)
 
 		callable := func() error {
-			externalVar = true
+			called <- struct{}{}
 			return nil
 		}
 
@@ -39,8 +41,10 @@ func Test_NewWithContext(t *testing.T) {
 			t.Error(`"context canceled" error was expected`)
 		}
 
-		if externalVar != false {
-			t.Error("external variable should not be modified")
+		select {
+		case <-called:
+			t.Error("callable func was not expected to be called")
+		default:
 		}
 	})
 }
