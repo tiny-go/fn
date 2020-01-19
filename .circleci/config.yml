@@ -2,7 +2,6 @@ version: 2
 jobs:
   test-future:
     docker:
-      # specify the version
       - image: circleci/golang:1.13
     working_directory: /go/src/github.com/tiny-go/fn/future
     steps:
@@ -19,7 +18,6 @@ jobs:
             go test -v -race ./...
   test-retry:
     docker:
-      # specify the version
       - image: circleci/golang:1.13
     working_directory: /go/src/github.com/tiny-go/fn/retry
     steps:
@@ -34,9 +32,26 @@ jobs:
           command: |
             cd retry
             go test -v -race ./...
+  test-sync:
+    docker:
+      - image: circleci/golang:1.13
+    working_directory: /go/src/github.com/tiny-go/fn/retry
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            cd sync
+            go mod vendor
+      - run:
+          name: Unit tests
+          command: |
+            cd sync
+            go test -v -race ./...
 workflows:
   version: 2
   test_all:
     jobs:
       - test-future
       - test-retry
+      - test-sync
