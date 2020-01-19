@@ -8,6 +8,7 @@
 
 - [Future](future/README.md)
 - [Retry](retry/README.md)
+- [Sync](sync/README.md)
 
 [godoc-badge]: https://godoc.org/github.com/tiny-go/fn?status.svg
 [godoc-link]: https://godoc.org/github.com/tiny-go/fn
