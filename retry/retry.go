@@ -3,12 +3,12 @@ package retry
 import (
 	"context"
 	"time"
-
-	"github.com/tiny-go/fn"
 )
 
+type Retryable func() (abort bool, err error)
+
 // Strategy is a configurable strategy that calls retryable function
-type Strategy func(fn.Callable) error
+type Strategy func(Retryable) error
 
 // Option applies a single retry option to the strategy config
 type Option func(options *Options)
@@ -73,25 +73,32 @@ func NewStrategy(opts ...Option) Strategy {
 		opt(options)
 	}
 
-	return func(fn fn.Callable) (err error) {
-		tick := time.NewTicker(options.interval)
+	return func(fn Retryable) (err error) {
+		var (
+			tick  = time.NewTicker(options.interval)
+			abort bool
+		)
+
 		defer tick.Stop()
 
 		for try := uint(1); try <= options.attempts; try++ {
-			if err = fn(); err == nil {
+			if abort, err = fn(); err == nil || abort {
 				break
 			}
 			// no need to wait if last attempt
 			if try == options.attempts {
 				break
 			}
+
 			options.callback(try, err)
+
 			select {
 			case <-options.context.Done():
 				return err
 			case <-tick.C:
 			}
 		}
+
 		return err
 	}
 }

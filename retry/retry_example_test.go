@@ -14,7 +14,7 @@ func ExampleNewStrategy() {
 		}),
 	)
 
-	retryableFunc := func() (err error) {
+	retryableFunc := func() (abort bool, err error) {
 		// do some retryable stuff here
 		return
 	}

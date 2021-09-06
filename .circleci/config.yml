@@ -2,7 +2,7 @@ version: 2
 jobs:
   test-future:
     docker:
-      - image: circleci/golang:1.13
+      - image: circleci/golang:1.16
     working_directory: /go/src/github.com/tiny-go/fn/future
     steps:
       - checkout
@@ -18,7 +18,7 @@ jobs:
             go test -v -race ./...
   test-retry:
     docker:
-      - image: circleci/golang:1.13
+      - image: circleci/golang:1.16
     working_directory: /go/src/github.com/tiny-go/fn/retry
     steps:
       - checkout
@@ -34,7 +34,7 @@ jobs:
             go test -v -race ./...
   test-sync:
     docker:
-      - image: circleci/golang:1.13
+      - image: circleci/golang:1.16
     working_directory: /go/src/github.com/tiny-go/fn/retry
     steps:
       - checkout

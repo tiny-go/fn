@@ -4,22 +4,22 @@ import (
 	"context"
 	"errors"
 	"testing"
-
-	"github.com/tiny-go/fn"
 )
 
 const tries = 10
 
 var errExpected = errors.New("error")
 
-func createCallable(successOn uint) fn.Callable {
+func createCallable(successOn uint) Retryable {
 	var try uint
-	return func() error {
+	return func() (bool, error) {
 		try++
+
 		if try < successOn {
-			return errExpected
+			return false, errExpected
 		}
-		return nil
+
+		return false, nil
 	}
 }
 

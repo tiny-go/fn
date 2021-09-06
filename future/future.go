@@ -1,10 +1,6 @@
 package future
 
-import (
-	"context"
-
-	"github.com/tiny-go/fn"
-)
+import "context"
 
 // Option applies a single retry option to the strategy config
 type Option func(o *Options)
@@ -13,7 +9,7 @@ type Option func(o *Options)
 type Callback func(err error)
 
 // Factory is a future factory
-type Factory func(fn fn.Callable) func() error
+type Factory func(fn func() error) func() error
 
 // Options is a future config
 type Options struct {
@@ -43,7 +39,7 @@ func NewFactory(opts ...Option) Factory {
 		opt(options)
 	}
 
-	return func(fn fn.Callable) func() error {
+	return func(fn func() error) func() error {
 		var err error
 		done := make(chan struct{}, 1)
 		go func() {
@@ -65,11 +61,11 @@ func NewFactory(opts ...Option) Factory {
 }
 
 // New is a wrapper around Factory with no options provided returning a new future
-func New(fn fn.Callable) func() error {
+func New(fn func() error) func() error {
 	return NewFactory()(fn)
 }
 
 // NewWithContext creates a future func with provided callable and context
-func NewWithContext(ctx context.Context, fn fn.Callable) func() error {
+func NewWithContext(ctx context.Context, fn func() error) func() error {
 	return NewFactory(WithContext(ctx))(fn)
 }
