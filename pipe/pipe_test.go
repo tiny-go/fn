@@ -65,4 +65,29 @@ func TestPipe(t *testing.T) {
 		<-out1
 		<-out2
 	})
+
+	t.Run("merge", func(t *testing.T) {
+		var (
+			out1   = make(chan int, 2)
+			out2   = make(chan int, 2)
+			merged = pipe.Merge(out1, out2)
+		)
+
+		out1 <- 1
+		out2 <- 2
+		out1 <- 3
+		out2 <- 4
+
+		close(out1)
+		close(out2)
+
+		<-merged
+		<-merged
+		<-merged
+		<-merged
+
+		if v := <-merged; v != 0 {
+			t.Errorf("channel must be closed and return a default value")
+		}
+	})
 }

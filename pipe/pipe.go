@@ -1,5 +1,7 @@
 package pipe
 
+import "sync"
+
 // Extract elements from a slice to a channel.
 func Extract[T any](elements ...T) <-chan T {
 	output := make(chan T)
@@ -72,4 +74,28 @@ func Reduce[I, A any](input <-chan I, reduceFunc func(accum A, element I) A) A {
 	}
 
 	return accum
+}
+
+// Merge multiple channels to a single output channnel.
+func Merge[T any](outputs ...<-chan T) chan T {
+	var (
+		wg     sync.WaitGroup
+		merged = make(chan T)
+	)
+
+	wg.Add(len(outputs))
+
+	for _, output := range outputs {
+		go func(output <-chan T) {
+			for v := range output {
+				merged <- v
+			}
+
+			wg.Done()
+		}(output)
+	}
+
+	go func() { wg.Wait(); close(merged) }()
+
+	return merged
 }
